@@ -601,12 +601,15 @@ Therefore, `iverilog` requires:
 2. **Behavioral Models (`sky130_fd_sc_hd.v`)**: Verilog behavioral descriptions of the standard cell library.
 3. **Synthesized Netlist**: The gate-level netlist written by Yosys (`write_verilog -noattr`).
 4. **Testbench**: The same testbench used for RTL simulation.
+<img width="1366" height="768" alt="Screenshot (416)" src="https://github.com/user-attachments/assets/a0fb82e4-6f4a-4522-bcc2-cb6b1402f2fe" />
+
 
 ```bash
 iverilog ../my_lib/verilog_model/primitives.v ../my_lib/verilog_model/sky130_fd_sc_hd.v <netlist>.v <testbench>.v
 ./a.out
 gtkwave <dumpfile>.vcd &
 ```
+<img width="1366" height="768" alt="Screenshot (430)" src="https://github.com/user-attachments/assets/55677bcb-7c54-4799-aa4f-c920da56bf6a" />
 
 ---
 
@@ -634,6 +637,12 @@ yosys> show
 #### Synthesis Observation:
 - Modern Yosys selects a single dedicated **`sky130_fd_sc_hd__mux2_1`** cell (inputs `A0` $\leftarrow$ `i0`, `A1` $\leftarrow$ `i1`, `S` $\leftarrow$ `sel`, output `X` $\rightarrow$ `y`).
 - This contrasts with older tool releases that decomposed the equation into 3 separate gates (`clkinv_1` + `nand2_1` + `o21ai_0`). The modern mapping minimizes area, gate delay, and dynamic power.
+- 
+<img width="1366" height="768" alt="Screenshot (431)" src="https://github.com/user-attachments/assets/1a35e7ee-62c1-4686-87dd-d158f6ae6005" />
+<img width="1366" height="768" alt="Screenshot (433)" src="https://github.com/user-attachments/assets/069b3fb5-3e74-431f-828b-635e4ae0f212" />
+<img width="1366" height="768" alt="Screenshot (435)" src="https://github.com/user-attachments/assets/c53b837b-d875-433e-b9a0-7a68e587808c" />
+<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/7720c9a7-84a0-4786-8c6f-20255112642b" />
+
 
 <!-- Add your ternary_operator_mux Schematic screenshot below -->
 <!-- ![ternary_operator_mux Schematic](images/ternary_operator_mux_schematic.png) -->
@@ -644,6 +653,8 @@ iverilog ../my_lib/verilog_model/primitives.v ../my_lib/verilog_model/sky130_fd_
 ./a.out
 gtkwave tb_ternary_operator_mux.vcd &
 ```
+<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/ccf87e04-31ad-44f3-8ec6-5bf816d78b1b" />
+
 - **Result:** Pre-synthesis RTL simulation and post-synthesis GLS waveforms match **100% identically**. No glitch or mismatch occurs.
 
 ---
@@ -669,8 +680,14 @@ iverilog bad_mux.v tb_bad_mux.v
 ./a.out
 gtkwave tb_bad_mux.vcd &
 ```
+<img width="1366" height="768" alt="Screenshot (446)" src="https://github.com/user-attachments/assets/d30493db-c3f7-4726-ad13-fd0b58002f67" />
+
 - **Behavior:** The simulator only evaluates the `always` block when `sel` changes.
 - **The Glitch:** When `sel = 0` and input `i0` changes from `0` to `1`, output `y` **fails to update** and stays latched at `0`! It only updates much later when `sel` finally toggles.
+<img width="1366" height="768" alt="Screenshot (458)" src="https://github.com/user-attachments/assets/868882a6-0f3e-4454-94bf-64d10e29cc41" />
+<img width="1366" height="768" alt="Screenshot (449)" src="https://github.com/user-attachments/assets/2256a877-61c4-40dc-bdfa-9dc6f1771f4c" />
+<img width="1366" height="768" alt="Screenshot (454)" src="https://github.com/user-attachments/assets/d43304d0-e4a9-49f5-942f-95541739cc44" />
+
 
 <!-- Add your bad_mux RTL Waveform screenshot below -->
 <!-- ![bad_mux RTL Simulation](images/bad_mux_rtl_waveform.png) -->
@@ -700,10 +717,10 @@ gtkwave tb_bad_mux.vcd &
 #### The Mismatch Summary:
 | Stage | Input Condition | Output Behavior | Conclusion |
 | :--- | :--- | :--- | :--- |
-| **RTL Sim (`bad_mux.v`)** | `sel = 0`, `i0` toggles $0 \rightarrow 1$ | $y$ **remains 0** (holds previous value) | ❌ Latch-like simulation artifact |
-| **GLS Sim (`bad_mux_netlist.v`)** | `sel = 0`, `i0` toggles $0 \rightarrow 1$ | $y$ **immediately becomes 1** | ✅ Real combinational hardware |
+| **RTL Sim (`bad_mux.v`)** | `sel = 0`, `i0` toggles $0 \rightarrow 1$ | $y$ **remains 0** (holds previous value) | Latch-like simulation artifact |
+| **GLS Sim (`bad_mux_netlist.v`)** | `sel = 0`, `i0` toggles $0 \rightarrow 1$ | $y$ **immediately becomes 1** |  Real combinational hardware |
 
-> 📌 **Takeaway:** Always use `always @(*)` or `always_comb` in SystemVerilog for combinational logic to prevent sensitivity list omissions.
+>  **Takeaway:** Always use `always @(*)` or `always_comb` in SystemVerilog for combinational logic to prevent sensitivity list omissions.
 
 ---
 
@@ -720,6 +737,7 @@ begin
 end
 endmodule
 ```
+<img width="1366" height="768" alt="Screenshot (460)" src="https://github.com/user-attachments/assets/64ed6f64-56c9-4f15-a137-b6796c35748f" />
 
 #### Why Mismatch Occurs:
 1. **In RTL Simulation:**
@@ -747,6 +765,9 @@ yosys> abc -liberty ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib
 yosys> write_verilog -noattr blocking_caveat_netlist.v
 yosys> show
 ```
+<img width="1366" height="768" alt="Screenshot (462)" src="https://github.com/user-attachments/assets/ba38cbf0-cb7c-43b7-abbd-3243737f43e6" />
+<img width="1366" height="768" alt="Screenshot (464)" src="https://github.com/user-attachments/assets/445d49a4-76b1-44c0-a7a1-9bd3e054df0a" />
+
 
 <!-- Add your blocking_caveat Schematic screenshot below -->
 <!-- ![blocking_caveat Schematic](images/blocking_caveat_schematic.png) -->
@@ -757,8 +778,9 @@ iverilog ../my_lib/verilog_model/primitives.v ../my_lib/verilog_model/sky130_fd_
 ./a.out
 gtkwave tb_blocking_caveat.vcd &
 ```
+<img width="1366" height="768" alt="Screenshot (465)" src="https://github.com/user-attachments/assets/ac75975f-83c4-4d2d-a509-3c2e95eaa26e" />
 
-> 📌 **Golden Verilog Coding Rules:**
+>  **Golden Verilog Coding Rules:**
 > 1. Use **non-blocking assignments (`<=`)** for sequential circuits (`always @(posedge clk)`).
 > 2. Use **blocking assignments (`=`)** for combinational circuits (`always @(*)`), but ensure variables are assigned **before** they are read!
 > 3. Never mix blocking and non-blocking assignments within the same `always` block.
